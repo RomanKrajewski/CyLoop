@@ -1,8 +1,10 @@
 package de.berlin.htw.hiking4nerds
 
-import io.flutter.app.FlutterActivity
 import io.flutter.plugins.GeneratedPluginRegistrant
 
+import androidx.annotation.NonNull
+import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.engine.FlutterEngine
 import android.os.Bundle
 
 import io.flutter.plugin.common.MethodChannel
@@ -15,13 +17,12 @@ class MainActivity: FlutterActivity() {
 
   var sharedData: Uri? = null
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    GeneratedPluginRegistrant.registerWith(this)
+  override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
+    GeneratedPluginRegistrant.registerWith(flutterEngine)
 
     sharedData = intent?.data
 
-    MethodChannel(flutterView, CHANNEL).setMethodCallHandler{ call, result ->
+    MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL).setMethodCallHandler{ call, result ->
       if (call.method!!.contentEquals("getSharedData")){
         result.success(sharedData?.toString() ?: "")
         sharedData = null
