@@ -91,6 +91,24 @@ class _SettingsPageState extends State<SettingsPage> {
             )
           ],
         ),
+        // Online Routing
+        Row(
+          mainAxisAlignment: axisAlignment,
+          children: <Widget>[
+            createHeading(LocalizationService().getLocalization(english: "Online Routing", german: "Online Routenberechnung")),
+            Switch(
+              value: gs.onlineRouting,
+              onChanged: (bool value) {
+                setState(() {
+                  gs.onlineRouting = value;
+                  saveSettings();
+                });
+              },
+              activeColor: htwGreen,
+              inactiveTrackColor: htwGrey,
+            )
+          ],
+        ),
         // Use Location
         Row(
           mainAxisAlignment: axisAlignment,

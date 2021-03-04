@@ -8,6 +8,7 @@ class GlobalSettings {
   VoidCallback langaugeChanged;
 
   bool safeHistory = true;
+  bool onlineRouting = true;
   bool useLocation = true;
   List<String> languageOptions = ["ENG", "DE"];
   String selectedLanguage;
@@ -20,6 +21,7 @@ class GlobalSettings {
   Future loadSettings() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     safeHistory = (prefs.getBool('safeHistory') ?? true);
+    onlineRouting = (prefs.getBool('onlineRouting') ?? true);
     useLocation = (prefs.getBool('useLocation') ?? true);
     selectedLanguage = (prefs.getString('selectedLanguage') ?? 'ENG');
     selectedUnit = (prefs.getString('selectedUnit') ?? 'km');

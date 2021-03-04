@@ -1,10 +1,13 @@
 import 'dart:collection';
+import 'dart:convert';
 
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:hiking4nerds/components/route_canvas.dart';
+import 'package:hiking4nerds/services/global_settings.dart';
 import 'package:hiking4nerds/services/localization_service.dart';
 import 'package:hiking4nerds/services/pointofinterest.dart';
+import 'package:hiking4nerds/services/routing/node.dart';
 import 'package:hiking4nerds/services/routing/osmdata.dart';
 import 'package:hiking4nerds/services/routeparams.dart';
 import 'package:hiking4nerds/services/route.dart';
@@ -12,6 +15,8 @@ import 'package:hiking4nerds/services/routing/poi_category.dart';
 import 'package:hiking4nerds/styles.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hiking4nerds/components/loading_text.dart';
+import 'package:http/http.dart' as http;
+
 
 class RouteList extends StatefulWidget {
   final RouteParamsCallback onPushRoutePreview;
@@ -45,57 +50,27 @@ class _RouteListState extends State<RouteList> {
   Future<void> calculateRoutes() async {
     List<HikingRoute> routes = List<HikingRoute>();
 
-    OsmData osm = OsmData();
-
-    try {
-      routes = await osm.calculateHikingRoutes(
-          widget.routeParams.startingLocation.latitude,
-          widget.routeParams.startingLocation.longitude,
-          widget.routeParams.distanceKm,
-          10,
-          widget.routeParams.poiCategories
-              .map((category) => category.id)
-              .toList());
-    } on NoPOIsFoundException catch (err) {
-      print("NoPOIsFoundException: " + err.toString());
-    }
-
-    if (routes.length == 0) {
-      routes = await OsmData().calculateHikingRoutes(
-          widget.routeParams.startingLocation.latitude,
-          widget.routeParams.startingLocation.longitude,
-          widget.routeParams.distanceKm,
-          10);
-    }
-
-    List<HikingRoute> filteredRoutes = new List();
-    for(HikingRoute route in routes) {
-
-      if (route.pointsOfInterest == null){
-        filteredRoutes.add(route);
-        continue;
-      }
-      List<PointOfInterest> newPois = new List();
-      Map<String, List<PointOfInterest>> poiMap = new HashMap();
-      for(PointOfInterest poi in route.pointsOfInterest){
-        if (poi.category == null) continue;
-
-        if (!poiMap.containsKey(poi.category.id)){
-          poiMap[poi.category.id] = [poi];
-        }else{
-          poiMap[poi.category.id].add(poi);
+    if(GlobalSettings().onlineRouting){
+        var response = await http.get("http://192.168.77.20:8080/route");
+        if(response.statusCode != 200){
+          print("H4N Request failed. Status code: " + response.statusCode.toString());
         }
-      }
+        dynamic parsedRouteJson = JsonDecoder().convert(response.body);
+        print("route query done");
+        var path = new List<Node>();
+        List<dynamic> lattitudes = parsedRouteJson["lattitudes"];
+        List<dynamic> longitudes = parsedRouteJson["longitudes"];
+        List<dynamic> elevations = parsedRouteJson["elevations"];
+        for(int i = 0; i < lattitudes.length; i++){
+          path.add(new Node(i, lattitudes[i] as double, longitudes[i] as double));
+        }
+        print("iterating done");
+        routes.add(new HikingRoute(path, parsedRouteJson["totalLength"] / 1000.0, pointsOfInterest: new List<PointOfInterest>(), elevations: elevations.cast<double>()));
 
-      for(List<PointOfInterest> poiList in poiMap.values){
-        poiList.shuffle();
-        newPois.addAll(poiList.sublist(0, maximumPointsOfInterest < poiList.length ? maximumPointsOfInterest : poiList.length));
-      }
-
-      route.pointsOfInterest = newPois;
-      filteredRoutes.add(route);
+    } else{
+      routes = await findRoutesOffline(routes);
     }
-    routes = filteredRoutes;
+
 
 
     if (routes.length != 0) {
@@ -151,6 +126,61 @@ class _RouteListState extends State<RouteList> {
         backgroundColor: Colors.red,
       ).show(context);
     }
+  }
+
+  Future<List<HikingRoute>> findRoutesOffline(List<HikingRoute> routes) async {
+    OsmData osm = OsmData();
+
+    try {
+      routes = await osm.calculateHikingRoutes(
+          widget.routeParams.startingLocation.latitude,
+          widget.routeParams.startingLocation.longitude,
+          widget.routeParams.distanceKm,
+          10,
+          widget.routeParams.poiCategories
+              .map((category) => category.id)
+              .toList());
+    } on NoPOIsFoundException catch (err) {
+      print("NoPOIsFoundException: " + err.toString());
+    }
+
+    if (routes.length == 0) {
+      routes = await OsmData().calculateHikingRoutes(
+          widget.routeParams.startingLocation.latitude,
+          widget.routeParams.startingLocation.longitude,
+          widget.routeParams.distanceKm,
+          10);
+    }
+
+    List<HikingRoute> filteredRoutes = new List();
+    for(HikingRoute route in routes) {
+
+      if (route.pointsOfInterest == null){
+        filteredRoutes.add(route);
+        continue;
+      }
+      List<PointOfInterest> newPois = new List();
+      Map<String, List<PointOfInterest>> poiMap = new HashMap();
+      for(PointOfInterest poi in route.pointsOfInterest){
+        if (poi.category == null) continue;
+
+        if (!poiMap.containsKey(poi.category.id)){
+          poiMap[poi.category.id] = [poi];
+        }else{
+          poiMap[poi.category.id].add(poi);
+        }
+      }
+
+      for(List<PointOfInterest> poiList in poiMap.values){
+        poiList.shuffle();
+        newPois.addAll(poiList.sublist(0, maximumPointsOfInterest < poiList.length ? maximumPointsOfInterest : poiList.length));
+      }
+
+      route.pointsOfInterest = newPois;
+      filteredRoutes.add(route);
+    }
+    routes = filteredRoutes;
+    return routes;
   }
 
   buildHeader() {

@@ -339,7 +339,7 @@ class OsmData{
         includedPois.addAll(poiRTree.search(Rectangle.fromPoints(Point(searchTopLeft[0], searchTopLeft[1]), Point(searchBottomRight[0], searchBottomRight[1]))).map((e) => e.value));
       });
 
-      var routeResult = HikingRoute(routeNodes, totalRouteLength, includedPois.toList());
+      var routeResult = HikingRoute(routeNodes, totalRouteLength, pointsOfInterest: includedPois.toList());
       routes.add(routeResult);
       if(PROFILING) print('Route ${routes.length} done in ${DateTime.now().millisecondsSinceEpoch - timestampRouteStart} ms. Total length: ${routeResult.totalLength}. Nr of POI: ${routeResult.pointsOfInterest.length}');
     }

@@ -98,6 +98,6 @@ class GpxDataHandler extends ImportExportHandler{
       });
     }
 
-    return new HikingRoute(path, 0, pointsOfInterest, elevations);
+    return new HikingRoute(path, 0, pointsOfInterest: pointsOfInterest, elevations: elevations);
   }
 }

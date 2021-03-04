@@ -166,7 +166,7 @@ class GeojsonDataHandler extends ImportExportHandler{
   ///NOTE: a single feature represented as point in a feature collection will be interpreted as a POI
   HikingRoute _geoJsonFeatureToRoute(GeoJsonFeatureCollection geoJsonFeatureCollection){
     List<GeoJsonFeature> features = geoJsonFeatureCollection.collection;
-    HikingRoute hikingRoute = new HikingRoute(null, 0, new List<PointOfInterest>());
+    HikingRoute hikingRoute = new HikingRoute(null, 0, pointsOfInterest: new List<PointOfInterest>());
 
     for (GeoJsonFeature feature in features){
       if (feature.type == GeoJsonFeatureType.line){

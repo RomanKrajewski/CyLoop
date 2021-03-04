@@ -8,7 +8,7 @@ class HikingRoute {
   List<double> elevations; // elevations of route points in m; route points and their elevations have the same index
   DateTime date; // date created
 
-  HikingRoute (List<Node> path, double totalLength, [List<PointOfInterest> pointsOfInterest, List<double> elevations]) {
+  HikingRoute (List<Node> path, double totalLength, {List<PointOfInterest> pointsOfInterest, List<double> elevations}) {
     this.path = path;
     this.totalLength = totalLength;
     this.pointsOfInterest = pointsOfInterest;
