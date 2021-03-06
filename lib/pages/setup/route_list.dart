@@ -51,9 +51,13 @@ class _RouteListState extends State<RouteList> {
     List<HikingRoute> routes = List<HikingRoute>();
 
     if(GlobalSettings().onlineRouting){
-        var response = await http.get("http://192.168.77.20:8080/route");
+        var lat = widget.routeParams.startingLocation.latitude;
+        var lng = widget.routeParams.startingLocation.longitude;
+        var length = (widget.routeParams.distanceKm * 1000).toInt();
+        var request = 'http://192.168.77.20:8080/route?lat=$lat&lng=$lng&length=$length';
+        var response = await http.get(request);
         if(response.statusCode != 200){
-          print("H4N Request failed. Status code: " + response.statusCode.toString());
+          print('H4N Request failed. Status code: ${response.statusCode.toString()}, Request: $request');
         }
         dynamic parsedRouteJson = JsonDecoder().convert(response.body);
         print("route query done");
