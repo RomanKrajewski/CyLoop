@@ -18,7 +18,7 @@ class ElevationQuery {
       currentURL += path[i].latitude.toString() + "," + path[i].longitude.toString();
 
       if (i % nodesPerQuery == 0 && i > 0 || i == path.length - 1) { // every nodesPerQuery steps or when all paths were visited
-        http.Response response = await http.get(currentURL);
+        http.Response response = await http.get(Uri.parse(currentURL));
         dynamic parsedData = JSON.jsonDecode(response.body);
         int addRuns = (i % nodesPerQuery == 0) ? nodesPerQuery : i % nodesPerQuery;
         for (int j = 0; j < addRuns; j++) {

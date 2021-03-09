@@ -367,18 +367,19 @@ class OsmData{
     var easternBorder = bottomRightBoundingBox[1];
     var categoryString = categories.join('|');
     var radiusInM = radius*1000;
-    var url = 'https://overpass.kumi.systems/api/interpreter?data=[bbox:$southernBorder, $westernBorder, $northernBorder, $easternBorder]'
+    var uri = Uri(scheme: "https", host: "overpass.kumi.systems", path: '/api/interpreter',
+        query: 'data=[bbox:$southernBorder, $westernBorder, $northernBorder, $easternBorder]'
         '[out:json][timeout:300];'
         '(node["tourism"~"$categoryString"](around:$radiusInM,$aroundLat, $aroundLong);'
         'node["amenity"~"$categoryString"](around:$radiusInM,$aroundLat, $aroundLong););'
-        'out body qt;';
+        'out body qt;');
 
     var timestamp = DateTime.now().millisecondsSinceEpoch;
-    var response = await http.get(url);
+    var response = await http.get(uri);
     if(PROFILING) print("POI query done in " + (DateTime.now().millisecondsSinceEpoch - timestamp).toString() + " ms");
 
     if(response.statusCode != 200) print("OSM POI request failed. Statuscode:" + response.statusCode.toString() +
-        "\n Query: " + url +
+        "\n Query: " + uri.toString() +
         "\n Message: " + response.body);
     return response.body;
   }
@@ -397,7 +398,7 @@ class OsmData{
         ';way["highway"](around:$radiusInM,$aroundLat, $aroundLong);'
         '(._;>;); out body qt;';
     var timestamp = DateTime.now().millisecondsSinceEpoch;
-    var response = await http.get(url);
+    var response = await http.get(Uri.parse(url));
     if(PROFILING) print("Map query done in " + (DateTime.now().millisecondsSinceEpoch - timestamp).toString() + " ms");
     if(response.statusCode != 200) print("OSM request failed. Statuscode:" + response.statusCode.toString() +
         "\n Query: " + url +
