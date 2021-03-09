@@ -59,17 +59,18 @@ class _RouteListState extends State<RouteList> {
         if(response.statusCode != 200){
           print('H4N Request failed. Status code: ${response.statusCode.toString()}, Request: $request');
         }
-        dynamic parsedRouteJson = JsonDecoder().convert(response.body);
-        print("route query done");
-        var path = new List<Node>();
-        List<dynamic> lattitudes = parsedRouteJson["lattitudes"];
-        List<dynamic> longitudes = parsedRouteJson["longitudes"];
-        List<dynamic> elevations = parsedRouteJson["elevations"];
-        for(int i = 0; i < lattitudes.length; i++){
-          path.add(new Node(i, lattitudes[i] as double, longitudes[i] as double));
+        dynamic parsedJson = JsonDecoder().convert(response.body);
+        for(var jsonRoute in parsedJson){
+          var path = new List<Node>();
+          List<dynamic> lattitudes = jsonRoute["lattitudes"];
+          List<dynamic> longitudes = jsonRoute["longitudes"];
+          List<dynamic> elevations = jsonRoute["elevations"];
+          for(int i = 0; i < lattitudes.length; i++){
+            path.add(new Node(i, lattitudes[i] as double, longitudes[i] as double));
+          }
+          print("iterating done");
+          routes.add(new HikingRoute(path, jsonRoute["totalLength"] / 1000.0, pointsOfInterest: new List<PointOfInterest>(), elevations: elevations.cast<double>()));
         }
-        print("iterating done");
-        routes.add(new HikingRoute(path, parsedRouteJson["totalLength"] / 1000.0, pointsOfInterest: new List<PointOfInterest>(), elevations: elevations.cast<double>()));
 
     } else{
       routes = await findRoutesOffline(routes);
