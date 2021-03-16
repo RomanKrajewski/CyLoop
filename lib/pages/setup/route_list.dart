@@ -53,8 +53,16 @@ class _RouteListState extends State<RouteList> {
     if(GlobalSettings().onlineRouting){
         var lat = widget.routeParams.startingLocation.latitude;
         var lng = widget.routeParams.startingLocation.longitude;
+        var categories = widget.routeParams.poiCategories.map((e) => e.id);
         var length = (widget.routeParams.distanceKm * 1000).toInt();
-        var request = Uri(scheme: "http", host: "192.168.77.20", port:8080, path:"/route", query:'lat=$lat&lng=$lng&length=$length');
+        Uri request;
+        if(categories.isEmpty){
+          request = Uri(scheme: "http", host: "192.168.77.20", port:8080, path:"/route",
+              queryParameters: {'lat':lat.toString(), 'lng':lng.toString(), 'length': length.toString()});
+        }else{
+          request = Uri(scheme: "http", host: "192.168.77.20", port:8080, path:"/poiroute",
+              queryParameters: {'lat':lat.toString(), 'lng':lng.toString(), 'length': length.toString(), 'category': categories});
+        }
         var response = await http.get(request);
         if(response.statusCode != 200){
           print('H4N Request failed. Status code: ${response.statusCode.toString()}, Request: $request');
@@ -69,7 +77,10 @@ class _RouteListState extends State<RouteList> {
             path.add(new Node(i, lattitudes[i] as double, longitudes[i] as double));
           }
           print("iterating done");
-          routes.add(new HikingRoute(path, jsonRoute["totalLength"] / 1000.0, pointsOfInterest: new List<PointOfInterest>(), elevations: elevations.cast<double>()));
+          List<dynamic> pointsOfInterestRaw = jsonRoute['pointsOfInterest'];
+          List<PointOfInterest> pointsOfInterest = pointsOfInterestRaw.map((e) => new PointOfInterest(e['osmID'], e['lat'], e['lon'],
+              {"amenity": e['category']})).toList();
+          routes.add(new HikingRoute(path, jsonRoute["totalLength"] / 1000.0, pointsOfInterest: pointsOfInterest, elevations: elevations.cast<double>()));
         }
 
     } else{

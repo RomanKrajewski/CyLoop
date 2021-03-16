@@ -7,6 +7,10 @@ class PointOfInterest extends Node {
 
   PointOfInterest(int id, double latitude, double longitude, this.tags)
       : super(id, latitude, longitude) {
+    getCategoryObject();
+  }
+
+  void getCategoryObject() {
     var categories = PoiCategory.categories.where((cat) => cat.id == getCategoryString());
     if (categories != null && categories.length > 0) {
       category = categories.first;
