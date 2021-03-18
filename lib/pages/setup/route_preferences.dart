@@ -22,6 +22,7 @@ class _RoutePreferencesState extends State<RoutePreferences> {
   double distance = 5.0; // default
   int selectedAltitude = 0;
   bool distanceAsDuration = false;
+  String vehicle;
   List<PoiCategory> selectedPoiCategories = List<PoiCategory>();
 
   altitudeSelection() {
@@ -69,6 +70,37 @@ class _RoutePreferencesState extends State<RoutePreferences> {
                           fontWeight: FontWeight.bold,
                           color: Colors.grey[600]),
                       textAlign: TextAlign.left,
+                    ),
+                    Padding(padding: EdgeInsets.only(top: 10)),
+                    Wrap(children: <Widget>[
+                      FlatButton(
+                          child: Text(LocalizationService().getLocalization(english: "Hike", german: "Wandern"),
+                              style: TextStyle(fontSize: 16)),
+                          color: vehicle == 'hike' ? htwGreen : htwGrey,
+                          onPressed: () {
+                            setState(() => vehicle = 'hike');
+                          }),
+                      FlatButton(
+                          child: Text(LocalizationService().getLocalization(english: "Bike", german: "Fahrrad"),
+                              style: TextStyle(fontSize: 16)),
+                          color: vehicle == 'bike' ? htwGreen : htwGrey,
+                          onPressed: () {
+                            setState(() => vehicle = 'bike');
+                          }),
+                      FlatButton(
+                          child: Text(LocalizationService().getLocalization(english: "Racingbike", german: "Rennrad"),
+                              style: TextStyle(fontSize: 16)),
+                          color: vehicle == 'racingbike' ? htwGreen : htwGrey,
+                          onPressed: () {
+                            setState(() => vehicle = 'racingbike');
+                          }),
+                      FlatButton(
+                          child: Text(LocalizationService().getLocalization(english: "Mountainbike", german: "Mountainbike"),
+                              style: TextStyle(fontSize: 16)),
+                          color: vehicle == 'mtb' ? htwGreen : htwGrey,
+                          onPressed: () {
+                            setState(() => vehicle = 'mtb');
+                          })],
                     ),
                     Padding(padding: EdgeInsets.only(top: 10)),
                     Wrap(children: <Widget>[
@@ -189,6 +221,7 @@ class _RoutePreferencesState extends State<RoutePreferences> {
                     widget.routeParams.poiCategories = selectedPoiCategories;
                     widget.routeParams.altitudeType =
                         AltitudeTypeHelper.fromIndex(selectedAltitude);
+                    widget.routeParams.vehicle = vehicle;
                     widget.onPushRouteList(widget.routeParams);
                   }),
             ),

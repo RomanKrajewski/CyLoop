@@ -55,13 +55,14 @@ class _RouteListState extends State<RouteList> {
         var lng = widget.routeParams.startingLocation.longitude;
         var categories = widget.routeParams.poiCategories.map((e) => e.id);
         var length = (widget.routeParams.distanceKm * 1000).toInt();
+        var vehicle = widget.routeParams.vehicle;
         Uri request;
         if(categories.isEmpty){
           request = Uri(scheme: "http", host: "192.168.77.20", port:8080, path:"/route",
-              queryParameters: {'lat':lat.toString(), 'lng':lng.toString(), 'length': length.toString()});
+              queryParameters: {'lat':lat.toString(), 'lng':lng.toString(), 'length': length.toString(), 'vehicle': vehicle});
         }else{
           request = Uri(scheme: "http", host: "192.168.77.20", port:8080, path:"/poiroute",
-              queryParameters: {'lat':lat.toString(), 'lng':lng.toString(), 'length': length.toString(), 'category': categories});
+              queryParameters: {'lat':lat.toString(), 'lng':lng.toString(), 'length': length.toString(), 'category': categories, "vehicle": vehicle});
         }
         var response = await http.get(request);
         if(response.statusCode != 200){

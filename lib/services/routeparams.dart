@@ -44,6 +44,7 @@ class RouteParams {
   Node startingLocation;
   double distanceKm;
   List<PoiCategory> poiCategories;
+  String vehicle;
   AltitudeType altitudeType;
   double altitude;
   List<HikingRoute> routes;
