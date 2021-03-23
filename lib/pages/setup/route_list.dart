@@ -51,41 +51,10 @@ class _RouteListState extends State<RouteList> {
     List<HikingRoute> routes = List<HikingRoute>();
 
     if(GlobalSettings().onlineRouting){
-        var lat = widget.routeParams.startingLocation.latitude;
-        var lng = widget.routeParams.startingLocation.longitude;
-        var categories = widget.routeParams.poiCategories.map((e) => e.id);
-        var length = (widget.routeParams.distanceKm * 1000).toInt();
-        var vehicle = widget.routeParams.vehicle;
-        Uri request;
-        if(categories.isEmpty){
-          request = Uri(scheme: "http", host: "192.168.77.20", port:8080, path:"/route",
-              queryParameters: {'lat':lat.toString(), 'lng':lng.toString(), 'length': length.toString(), 'vehicle': vehicle});
-        }else{
-          request = Uri(scheme: "http", host: "192.168.77.20", port:8080, path:"/poiroute",
-              queryParameters: {'lat':lat.toString(), 'lng':lng.toString(), 'length': length.toString(), 'category': categories, "vehicle": vehicle});
-        }
-        var response = await http.get(request);
-        if(response.statusCode != 200){
-          print('H4N Request failed. Status code: ${response.statusCode.toString()}, Request: $request');
-        }
-        dynamic parsedJson = JsonDecoder().convert(response.body);
-        for(var jsonRoute in parsedJson){
-          var path = new List<Node>();
-          List<dynamic> lattitudes = jsonRoute["lattitudes"];
-          List<dynamic> longitudes = jsonRoute["longitudes"];
-          List<dynamic> elevations = jsonRoute["elevations"];
-          for(int i = 0; i < lattitudes.length; i++){
-            path.add(new Node(i, lattitudes[i] as double, longitudes[i] as double));
-          }
-          print("iterating done");
-          List<dynamic> pointsOfInterestRaw = jsonRoute['pointsOfInterest'];
-          List<PointOfInterest> pointsOfInterest = pointsOfInterestRaw.map((e) => new PointOfInterest(e['osmID'], e['lat'], e['lon'],
-              {"amenity": e['category']})).toList();
-          routes.add(new HikingRoute(path, jsonRoute["totalLength"] / 1000.0, pointsOfInterest: pointsOfInterest, elevations: elevations.cast<double>()));
-        }
+        await findRoutesOnline(routes);
 
     } else{
-      routes = await findRoutesOffline(routes);
+        await findRoutesOffline(routes);
     }
 
 
@@ -145,7 +114,42 @@ class _RouteListState extends State<RouteList> {
     }
   }
 
-  Future<List<HikingRoute>> findRoutesOffline(List<HikingRoute> routes) async {
+  Future findRoutesOnline(List<HikingRoute> routes) async {
+    var lat = widget.routeParams.startingLocation.latitude;
+    var lng = widget.routeParams.startingLocation.longitude;
+    var categories = widget.routeParams.poiCategories.map((e) => e.id);
+    var length = (widget.routeParams.distanceKm * 1000).toInt();
+    var vehicle = widget.routeParams.vehicle;
+    Uri request;
+    if(categories.isEmpty){
+      request = Uri(scheme: "http", host: "192.168.77.20", port:8080, path:"/route",
+          queryParameters: {'lat':lat.toString(), 'lng':lng.toString(), 'length': length.toString(), 'vehicle': vehicle});
+    }else{
+      request = Uri(scheme: "http", host: "192.168.77.20", port:8080, path:"/poiroute",
+          queryParameters: {'lat':lat.toString(), 'lng':lng.toString(), 'length': length.toString(), 'category': categories, "vehicle": vehicle});
+    }
+    var response = await http.get(request);
+    if(response.statusCode != 200){
+      print('H4N Request failed. Status code: ${response.statusCode.toString()}, Request: $request');
+    }
+    dynamic parsedJson = JsonDecoder().convert(response.body);
+    for(var jsonRoute in parsedJson){
+      var path = new List<Node>();
+      List<dynamic> lattitudes = jsonRoute["lattitudes"];
+      List<dynamic> longitudes = jsonRoute["longitudes"];
+      List<dynamic> elevations = jsonRoute["elevations"];
+      for(int i = 0; i < lattitudes.length; i++){
+        path.add(new Node(i, lattitudes[i] as double, longitudes[i] as double));
+      }
+      print("iterating done");
+      List<dynamic> pointsOfInterestRaw = jsonRoute['pointsOfInterest'];
+      List<PointOfInterest> pointsOfInterest = pointsOfInterestRaw.map((e) => new PointOfInterest(e['osmID'], e['lat'], e['lon'],
+          {"amenity": e['category']})).toList();
+      routes.add(new HikingRoute(path, jsonRoute["totalLength"] / 1000.0, pointsOfInterest: pointsOfInterest, elevations: elevations.cast<double>()));
+    }
+  }
+
+  Future findRoutesOffline(List<HikingRoute> routes) async {
     OsmData osm = OsmData();
 
     try {
@@ -170,34 +174,35 @@ class _RouteListState extends State<RouteList> {
     }
 
     List<HikingRoute> filteredRoutes = new List();
-    for(HikingRoute route in routes) {
-
-      if (route.pointsOfInterest == null){
+    for (HikingRoute route in routes) {
+      if (route.pointsOfInterest == null) {
         filteredRoutes.add(route);
         continue;
       }
       List<PointOfInterest> newPois = new List();
       Map<String, List<PointOfInterest>> poiMap = new HashMap();
-      for(PointOfInterest poi in route.pointsOfInterest){
+      for (PointOfInterest poi in route.pointsOfInterest) {
         if (poi.category == null) continue;
 
-        if (!poiMap.containsKey(poi.category.id)){
+        if (!poiMap.containsKey(poi.category.id)) {
           poiMap[poi.category.id] = [poi];
-        }else{
+        } else {
           poiMap[poi.category.id].add(poi);
         }
       }
 
-      for(List<PointOfInterest> poiList in poiMap.values){
+      for (List<PointOfInterest> poiList in poiMap.values) {
         poiList.shuffle();
-        newPois.addAll(poiList.sublist(0, maximumPointsOfInterest < poiList.length ? maximumPointsOfInterest : poiList.length));
+        newPois.addAll(poiList.sublist(0,
+            maximumPointsOfInterest < poiList.length
+                ? maximumPointsOfInterest
+                : poiList.length));
       }
 
       route.pointsOfInterest = newPois;
       filteredRoutes.add(route);
     }
     routes = filteredRoutes;
-    return routes;
   }
 
   buildHeader() {

@@ -13,7 +13,7 @@
          additional functionality it is fine to subclass or reimplement
          FlutterApplication and put your custom class here. -->
     <application
-        android:label="hiking4nerds"
+        android:label="CyLoop"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
         <activity
@@ -32,7 +32,7 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <intent-filter android:label="Hiking4Nerds">
+            <intent-filter android:label="CyLoop">
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

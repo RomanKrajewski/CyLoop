@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hiking4nerds/components/poi_category_search_bar.dart';
+import 'package:hiking4nerds/services/global_settings.dart';
 import 'package:hiking4nerds/services/localization_service.dart';
 import 'package:hiking4nerds/services/routing/poi_category.dart';
 import 'package:hiking4nerds/styles.dart';
@@ -19,10 +20,11 @@ class RoutePreferences extends StatefulWidget {
 
 class _RoutePreferencesState extends State<RoutePreferences> {
   int avgHikingSpeed = 12; // 12 min per km
+  var averageSpeeds = {"hike": 12, "bike": 3.5, "racingbike": 2, "mtb": 4};
   double distance = 5.0; // default
   int selectedAltitude = 0;
   bool distanceAsDuration = false;
-  String vehicle;
+  String vehicle = "hike";
   List<PoiCategory> selectedPoiCategories = List<PoiCategory>();
 
   altitudeSelection() {
@@ -72,7 +74,7 @@ class _RoutePreferencesState extends State<RoutePreferences> {
                       textAlign: TextAlign.left,
                     ),
                     Padding(padding: EdgeInsets.only(top: 10)),
-                    Wrap(children: <Widget>[
+                    if(GlobalSettings().onlineRouting) Wrap(children: <Widget>[
                       FlatButton(
                           child: Text(LocalizationService().getLocalization(english: "Hike", german: "Wandern"),
                               style: TextStyle(fontSize: 16)),
@@ -140,8 +142,7 @@ class _RoutePreferencesState extends State<RoutePreferences> {
                           width: 60.0,
                           alignment: Alignment.center,
                           child: Text(
-                            distanceAsDuration ? '${distance.toInt() *
-                                avgHikingSpeed} min' : '${distance.toInt()} km',
+                            distanceAsDuration ? '${distance*averageSpeeds[vehicle]~/60} h ${(distance*averageSpeeds[vehicle]).toInt()%60} min' : '${distance.toInt()} km',
                             style: TextStyle(
                                 fontSize: 16, color: Colors.grey[600]),
                           ),
