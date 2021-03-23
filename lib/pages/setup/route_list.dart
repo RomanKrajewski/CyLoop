@@ -48,13 +48,12 @@ class _RouteListState extends State<RouteList> {
   }
 
   Future<void> calculateRoutes() async {
-    List<HikingRoute> routes = List<HikingRoute>();
+    List<HikingRoute> routes;
 
     if(GlobalSettings().onlineRouting){
-        await findRoutesOnline(routes);
-
+       routes = await findRoutesOnline();
     } else{
-        await findRoutesOffline(routes);
+       routes = await findRoutesOffline();
     }
 
 
@@ -114,7 +113,8 @@ class _RouteListState extends State<RouteList> {
     }
   }
 
-  Future findRoutesOnline(List<HikingRoute> routes) async {
+  Future<List<HikingRoute>> findRoutesOnline() async {
+    List<HikingRoute> routes = new List();
     var lat = widget.routeParams.startingLocation.latitude;
     var lng = widget.routeParams.startingLocation.longitude;
     var categories = widget.routeParams.poiCategories.map((e) => e.id);
@@ -147,9 +147,11 @@ class _RouteListState extends State<RouteList> {
           {"amenity": e['category']})).toList();
       routes.add(new HikingRoute(path, jsonRoute["totalLength"] / 1000.0, pointsOfInterest: pointsOfInterest, elevations: elevations.cast<double>()));
     }
+    return routes;
   }
 
-  Future findRoutesOffline(List<HikingRoute> routes) async {
+  Future<List<HikingRoute>> findRoutesOffline() async {
+    List<HikingRoute> routes = new List();
     OsmData osm = OsmData();
 
     try {
@@ -202,7 +204,7 @@ class _RouteListState extends State<RouteList> {
       route.pointsOfInterest = newPois;
       filteredRoutes.add(route);
     }
-    routes = filteredRoutes;
+    return filteredRoutes;
   }
 
   buildHeader() {
