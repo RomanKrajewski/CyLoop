@@ -5,6 +5,7 @@ import 'dart:convert' as JSON;
 
 // TODO perhaps it would be cleaner to resolve all services through
 // TODO dependency injection
+
 class ElevationQuery {
   static Future<List<double>> queryElevations(HikingRoute route) async {
     List<Node> path = route.path;
@@ -33,5 +34,16 @@ class ElevationQuery {
 
     // Alternatively the result could be assigned to the passed route reference
     return queriedElevations; 
+  }
+
+  static Future<List<double>> queryElevationsBetter(HikingRoute route) async {
+    String basisURL = "https://h4nsolo.f4.htw-berlin.de/elevation/api/v1/lookup";
+    List<Map<String, double>> locations = route.path.map((e) => {"latitude": e.latitude, "longitude": e.longitude}).toList();
+    Map<String, String> headers = {"Accept": "application/json", "Content-Type": "application/json"};
+    http.Response response = await http.post(Uri.parse(basisURL), headers: headers, body: JSON.jsonEncode({"locations": locations}));
+    List<dynamic> parsedData = JSON.jsonDecode(response.body)["results"];
+    List<double> queriedElevations = new List();
+    parsedData.forEach((element) {queriedElevations.add(element["elevation"].toDouble());});
+    return queriedElevations;
   }
 }

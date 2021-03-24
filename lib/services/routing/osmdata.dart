@@ -128,7 +128,7 @@ class OsmData{
 
     var elevationTimestamp = DateTime.now().millisecondsSinceEpoch;
     for(var route in routes){
-        route.elevations = await ElevationQuery.queryElevations(route);
+        route.elevations = await ElevationQuery.queryElevationsBetter(route);
     }
     if(PROFILING){
       print("Elevation Queried in " + (DateTime.now().millisecondsSinceEpoch - elevationTimestamp).toString() + " ms");

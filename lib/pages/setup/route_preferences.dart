@@ -130,7 +130,7 @@ class _RoutePreferencesState extends State<RoutePreferences> {
                             activeColor: htwGreen,
                             inactiveColor: htwGrey,
                             min: 2.0,
-                            max: 100.0,
+                            max: GlobalSettings().onlineRouting ? 100 :30,
                             label: distance.toString(),
                             onChanged: (value) {
                               setState(() => distance = value.roundToDouble());
