@@ -34,6 +34,7 @@ class _RouteListState extends State<RouteList> {
   String _startingLocationAddress = LocalizationService()
       .getLocalization(english: 'Loading..', german: 'Lädt..');
   static final int maximumPointsOfInterest = 10;
+  int generationTime = 0;
 
   @override
   void initState() {
@@ -48,6 +49,7 @@ class _RouteListState extends State<RouteList> {
   }
 
   Future<void> calculateRoutes() async {
+    var routingTimeStamp = DateTime.now().millisecondsSinceEpoch;
     List<HikingRoute> routes;
 
     if(GlobalSettings().onlineRouting){
@@ -56,14 +58,42 @@ class _RouteListState extends State<RouteList> {
        routes = await findRoutesOffline();
     }
 
+    List<HikingRoute> filteredRoutes = new List();
+    for (HikingRoute route in routes) {
+      if (route.pointsOfInterest == null) {
+        filteredRoutes.add(route);
+        continue;
+      }
+      List<PointOfInterest> newPois = new List();
+      Map<String, List<PointOfInterest>> poiMap = new HashMap();
+      for (PointOfInterest poi in route.pointsOfInterest) {
+        if (poi.category == null) continue;
 
+        if (!poiMap.containsKey(poi.category.id)) {
+          poiMap[poi.category.id] = [poi];
+        } else {
+          poiMap[poi.category.id].add(poi);
+        }
+      }
 
-    if (routes.length != 0) {
-      routes = routes.toList(growable: true);
-      routes.removeWhere((elem) => elem == null);
+      for (List<PointOfInterest> poiList in poiMap.values) {
+        poiList.shuffle();
+        newPois.addAll(poiList.sublist(0,
+            maximumPointsOfInterest < poiList.length
+                ? maximumPointsOfInterest
+                : poiList.length));
+      }
+
+      route.pointsOfInterest = newPois;
+      filteredRoutes.add(route);
+    }
+
+    if (filteredRoutes.length != 0) {
+      filteredRoutes = filteredRoutes.toList(growable: true);
+      filteredRoutes.removeWhere((elem) => elem == null);
 
       setState(() {
-        widget.routeParams.routes = routes;
+        widget.routeParams.routes = filteredRoutes;
 
         switch (widget.routeParams.altitudeType) {
           case AltitudeType.none:
@@ -111,6 +141,9 @@ class _RouteListState extends State<RouteList> {
         backgroundColor: Colors.red,
       ).show(context);
     }
+    generationTime = DateTime.now().millisecondsSinceEpoch - routingTimeStamp;
+    print("Route Calculation done in " + (generationTime).toString() + " ms for" + widget.routeParams.distanceKm.toString() + " km.");
+
   }
 
   Future<List<HikingRoute>> findRoutesOnline() async {
@@ -175,36 +208,7 @@ class _RouteListState extends State<RouteList> {
           10);
     }
 
-    List<HikingRoute> filteredRoutes = new List();
-    for (HikingRoute route in routes) {
-      if (route.pointsOfInterest == null) {
-        filteredRoutes.add(route);
-        continue;
-      }
-      List<PointOfInterest> newPois = new List();
-      Map<String, List<PointOfInterest>> poiMap = new HashMap();
-      for (PointOfInterest poi in route.pointsOfInterest) {
-        if (poi.category == null) continue;
-
-        if (!poiMap.containsKey(poi.category.id)) {
-          poiMap[poi.category.id] = [poi];
-        } else {
-          poiMap[poi.category.id].add(poi);
-        }
-      }
-
-      for (List<PointOfInterest> poiList in poiMap.values) {
-        poiList.shuffle();
-        newPois.addAll(poiList.sublist(0,
-            maximumPointsOfInterest < poiList.length
-                ? maximumPointsOfInterest
-                : poiList.length));
-      }
-
-      route.pointsOfInterest = newPois;
-      filteredRoutes.add(route);
-    }
-    return filteredRoutes;
+    return routes;
   }
 
   buildHeader() {
@@ -264,7 +268,20 @@ class _RouteListState extends State<RouteList> {
               color: Colors.grey[600]),
         ),
         Text(
-          '${'${AltitudeTypeHelper.asString(widget.routeParams.altitudeType)}'}',
+          '${AltitudeTypeHelper.asString(widget.routeParams.altitudeType)}',
+          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+        ),
+      ]),TableRow(children: [
+        Text(
+          LocalizationService().getLocalization(
+              english: 'Generation time', german: 'Generierungszeit'),
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: Colors.grey[600]),
+        ),
+        Text(
+          '$generationTime ms',
           style: TextStyle(fontSize: 16, color: Colors.grey[600]),
         ),
       ]),

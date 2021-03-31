@@ -69,7 +69,7 @@ Graph _buildGraphThreaded(String nodesAndWaysJSON) {
 }
 
 class OsmData{
-  static const bool PROFILING = true;
+  static const bool PROFILING = false;
   static const double POIADJACENCYDISTANCE = 0.07;
   static const double beeLineToRealRatio = 0.7; // estimate of how much the beeline distance differs from real path distance
   static const double beeLineToRealRatioWithPOI = 0.6; // estimate of how much the beeline distance differs from real path distance (for some reason different when using poi algorithm)
@@ -128,7 +128,7 @@ class OsmData{
 
     var elevationTimestamp = DateTime.now().millisecondsSinceEpoch;
     for(var route in routes){
-        route.elevations = await ElevationQuery.queryElevationsBetter(route);
+        route.elevations = await ElevationQuery.queryElevations(route);
     }
     if(PROFILING){
       print("Elevation Queried in " + (DateTime.now().millisecondsSinceEpoch - elevationTimestamp).toString() + " ms");
